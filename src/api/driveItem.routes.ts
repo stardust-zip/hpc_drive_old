@@ -1,7 +1,15 @@
 import { Router } from "express";
-import { createItemHandler } from "../controllers/driveItem.controller";
+import {
+    createItemHandler,
+    getItemByIdHandler,
+    getItemsHandler,
+} from "../controllers/driveItem.controller";
 import { validate } from "../middlewares/validate";
-import { createDriveItemSchema } from "../validations/driveItem.validation";
+import {
+    createDriveItemSchema,
+    getItemSchema,
+    getItemsSchema,
+} from "../validations/driveItem.validation";
 
 const router: Router = Router();
 
@@ -11,5 +19,8 @@ router.post("/", validate(createDriveItemSchema), createItemHandler);
 // is just a middleeware
 // for example, an user create an item and validate, use craeteDriveItemSchema, compare it
 // to the item. If the item sastifie the schema. it's an succesfful request, else fail
+
+router.get("/", validate(getItemsSchema), getItemsHandler);
+router.get("/:itemId", validate(getItemSchema), getItemByIdHandler);
 
 export default router;

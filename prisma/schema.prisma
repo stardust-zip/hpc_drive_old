@@ -43,7 +43,7 @@ model FileMetadata {
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
 
-	driveItem DriveItem @relation(fields: [itemId], references: [itemId])
+	driveItem DriveItem @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
 
 	@@map("file_metadata")
 }
