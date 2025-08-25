@@ -7,8 +7,15 @@ export async function createItemHandler(
   next: NextFunction,
 ) {
   try {
-    // We assume an `ownerId` is attached to the request, e.g., from an auth middleware
-    const ownerId = "mock-user-uuid"; // Replace with actual user ID from auth
+    const ownerId = req.headers["x-user-id"] as string;
+
+    if (!ownerId) {
+      return res.status(401).json({
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "User ID is missing" },
+      });
+    }
+
     const newItem = await driveItemService.createItem(req.body, ownerId);
 
     res.status(201).json({
@@ -56,7 +63,11 @@ export async function getItemsHandler(
   }
 }
 
-export async function updateItemHandler(req: Request, res: Response, next: NextFunction) {
+export async function updateItemHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const { itemId } = req.params;
     const updatedItem = await driveItemService.updateItem(itemId!, req.body);
@@ -64,20 +75,24 @@ export async function updateItemHandler(req: Request, res: Response, next: NextF
     res.status(200).json({
       success: true,
       data: updatedItem,
-      message: 'Item updated successfully',
+      message: "Item updated successfully",
     });
   } catch (error) {
     next(error);
   }
 }
 
-export async function deleteItemHandler(req: Request, res: Response, next: NextFunction) {
+export async function deleteItemHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const { itemId } = req.params;
     await driveItemService.deleteItem(itemId!);
 
     res.status(204).send();
   } catch (error) {
-    next(error); 
+    next(error);
   }
 }
