@@ -83,3 +83,10 @@ export async function updateItem(itemId: string, data: UpdateDriveItemInput) {
   return updatedItem;
 }
 
+export async function deleteItem(itemId: string) {
+  const deletedItem = await prisma.driveItem.delete({
+    where: { itemId },
+  });
+  return deletedItem;
+}
+

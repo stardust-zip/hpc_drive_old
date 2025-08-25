@@ -47,3 +47,9 @@ export const updateItemSchema = z.object({
     message: 'Update body cannot be empty',
   }),
 });
+
+export const deleteItemSchema = z.object({
+  params: z.object({
+    itemId: z.uuid('Invalid item ID'),
+  }),
+});

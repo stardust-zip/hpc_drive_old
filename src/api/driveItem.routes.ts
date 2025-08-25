@@ -4,6 +4,7 @@ import {
   getItemByIdHandler,
   getItemsHandler,
   updateItemHandler,
+  deleteItemHandler,
 } from "../controllers/driveItem.controller";
 import { validate } from "../middlewares/validate";
 import {
@@ -11,6 +12,7 @@ import {
   getItemSchema,
   getItemsSchema,
   updateItemSchema,
+  deleteItemSchema,
 } from "../validations/driveItem.validation";
 
 const router: Router = Router();
@@ -26,5 +28,7 @@ router.get("/", validate(getItemsSchema), getItemsHandler);
 router.get("/:itemId", validate(getItemSchema), getItemByIdHandler);
 
 router.put("/:itemId", validate(updateItemSchema), updateItemHandler);
+
+router.delete("/:itemId", validate(deleteItemSchema), deleteItemHandler);
 
 export default router;

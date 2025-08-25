@@ -70,3 +70,14 @@ export async function updateItemHandler(req: Request, res: Response, next: NextF
     next(error);
   }
 }
+
+export async function deleteItemHandler(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { itemId } = req.params;
+    await driveItemService.deleteItem(itemId!);
+
+    res.status(204).send();
+  } catch (error) {
+    next(error); 
+  }
+}

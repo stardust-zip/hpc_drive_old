@@ -188,3 +188,63 @@ describe('PUT /api/v1/items/:itemId', () => {
     expect(response.status).toBe(404);
   });
 });
+
+
+describe('DELETE /api/v1/items/:itemId', () => {
+  it('should delete an item successfully', async () => {
+    const itemToDelete = await prisma.driveItem.create({
+      data: {
+        name: 'Item to be deleted',
+        itemType: 'FOLDER',
+        ownerId: 'mock-user',
+        permission: Permission.PRIVATE,
+      },
+    });
+
+    const response = await request(app).delete(
+      `/api/v1/items/${itemToDelete.itemId}`
+    );
+
+    expect(response.status).toBe(204);
+
+    const itemFromDb = await prisma.driveItem.findUnique({
+      where: { itemId: itemToDelete.itemId },
+    });
+    expect(itemFromDb).toBeNull();
+  });
+
+  it('should return a 404 error if the item to delete does not exist', async () => {
+    const nonExistentId = '123e4567-e89b-12d3-a456-426614174000';
+
+    const response = await request(app).delete(
+      `/api/v1/items/${nonExistentId}`
+    );
+      
+    expect(response.status).toBe(404);
+  });
+
+  it('should also delete associated file metadata due to cascading delete', async () => {
+    const fileToDelete = await prisma.driveItem.create({
+      data: {
+        name: 'file-with-meta.txt',
+        itemType: 'FILE',
+        ownerId: 'mock-user',
+        permission: Permission.PRIVATE,
+        fileMetadata: {
+          create: {
+            mimeType: 'text/plain',
+            size: 12345,
+            storagePath: '/path/to/file',
+          },
+        },
+      },
+    });
+
+    await request(app).delete(`/api/v1/items/${fileToDelete.itemId}`);
+
+    const metadataFromDb = await prisma.fileMetadata.findUnique({
+      where: { itemId: fileToDelete.itemId },
+    });
+    expect(metadataFromDb).toBeNull();
+  });
+});
