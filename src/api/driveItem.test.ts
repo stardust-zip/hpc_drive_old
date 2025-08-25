@@ -147,3 +147,44 @@ describe("GET /api/v1/items", () => {
         expect(response.body.data[0].name).toBe("Child 1");
     });
 });
+
+
+
+describe('PUT /api/v1/items/:itemId', () => {
+  it('should update an item name successfully', async () => {
+    const originalItem = await prisma.driveItem.create({
+      data: {
+        name: 'Original Name',
+        itemType: 'FOLDER',
+        ownerId: 'mock-user',
+        permission: Permission.PRIVATE,
+      },
+    });
+
+    const updateData = { name: 'Updated Name' };
+
+    const response = await request(app)
+      .put(`/api/v1/items/${originalItem.itemId}`)
+      .send(updateData);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.name).toBe(updateData.name);
+    expect(response.body.data.itemId).toBe(originalItem.itemId);
+
+    const updatedItemFromDb = await prisma.driveItem.findUnique({
+      where: { itemId: originalItem.itemId },
+    });
+    expect(updatedItemFromDb?.name).toBe(updateData.name);
+  });
+
+  it('should return a 404 error if the item to update does not exist', async () => {
+    const nonExistentId = '123e4567-e89b-12d3-a456-426614174000';
+    const updateData = { name: 'Updated Name' };
+
+    const response = await request(app)
+      .put(`/api/v1/items/${nonExistentId}`)
+      .send(updateData);
+      
+    expect(response.status).toBe(404);
+  });
+});

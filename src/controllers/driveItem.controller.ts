@@ -55,3 +55,18 @@ export async function getItemsHandler(
     next(error);
   }
 }
+
+export async function updateItemHandler(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { itemId } = req.params;
+    const updatedItem = await driveItemService.updateItem(itemId!, req.body);
+
+    res.status(200).json({
+      success: true,
+      data: updatedItem,
+      message: 'Item updated successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
