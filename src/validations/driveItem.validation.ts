@@ -23,3 +23,15 @@ export const createDriveItemSchema = z.object({
       ]),
     ),
 });
+
+export const getItemSchema = z.object({
+  params: z.object({
+    itemId: z.string().uuid("Invalid item ID"),
+  }),
+});
+
+export const getItemsSchema = z.object({
+  query: z.object({
+    parentId: z.string().uuid("Invalid parent ID").optional(),
+  }),
+});

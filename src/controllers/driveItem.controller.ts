@@ -12,12 +12,46 @@ export async function createItemHandler(
     const newItem = await driveItemService.createItem(req.body, ownerId);
 
     res.status(201).json({
-      // 201 is the status for success POST request?
       success: true,
       data: newItem,
       message: "Item created successfully",
-    }); // where is this json mesage send to
+    });
   } catch (error) {
-    next(error); // next(error) ?
+    next(error);
+  }
+}
+
+export async function getItemByIdHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { itemId } = req.params;
+    const item = await driveItemService.findItemById(itemId!);
+
+    res.status(200).json({
+      success: true,
+      data: item,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getItemsHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const items = await driveItemService.findItems(req.query);
+
+    res.status(200).json({
+      success: true,
+      data: items,
+    });
+  } catch (error) {
+    next(error);
   }
 }

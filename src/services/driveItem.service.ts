@@ -30,7 +30,8 @@ export async function createItem(data: CreateDriveItemInput, ownerId: string) {
     createPayload.fileMetadata = {
       create: {
         mimeType: data.fileMetadata.mimeType,
-        size: data.fileMetadata.size,
+        // size: data.fileMetadata.size,
+        size: BigInt(data.fileMetadata.size),
         storagePath: `some/path/${name}`, // This is just placeholder path, do whatever u want with it?
       },
     };
@@ -45,4 +46,26 @@ export async function createItem(data: CreateDriveItemInput, ownerId: string) {
   });
 
   return newItem;
+}
+
+export async function findItemById(itemId: string) {
+  const item = await prisma.driveItem.findUniqueOrThrow({
+    where: { itemId },
+    include: {
+      fileMetadata: true,
+      children: true,
+    },
+  });
+  return item;
+}
+
+export async function findItems(query: { parentId?: string }) {
+  const { parentId } = query;
+  const items = await prisma.driveItem.findMany({
+    where: {
+      parentId: parentId || null,
+      isTrashed: false,
+    },
+  });
+  return items;
 }
