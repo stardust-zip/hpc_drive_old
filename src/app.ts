@@ -2,10 +2,12 @@ import express, { Express, Request, Response, NextFunction } from "express";
 // this is just the router exported from app.ts, driveItemRoutes
 // is just a name we assigned to it
 import { Prisma } from "@prisma/client";
+import cors from 'cors';
 import driveItemRoutes from "./api/driveItem.routes";
 
 const app: Express = express();
 
+app.use(cors());
 app.use(express.json());
 
 // API Routes
