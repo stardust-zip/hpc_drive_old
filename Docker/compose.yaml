@@ -1,0 +1,44 @@
+# compose.yaml
+services:
+  # --- DEVELOPMENT DATABASE ---
+  db_dev:
+    image: postgres:16-alpine
+    restart: always
+    shm_size: 128mb
+    env_file:
+      - .env # This file should contain POSTGRES_USER, POSTGRES_PASSWORD, etc.
+    ports:
+      - "5432:5432" # Expose dev DB for local tools
+    volumes:
+      - dev_db_data:/var/lib/postgresql/data
+    networks:
+      - hpc_network
+
+  # --- ISOLATED TEST DATABASE ---
+  db_test:
+    image: postgres:16-alpine
+    restart: always
+    shm_size: 128mb
+    env_file:
+      - .env # Can reuse the same credentials
+    # DO NOT expose ports for the test database
+    volumes:
+      - test_db_data:/var/lib/postgresql/data
+    networks:
+      - hpc_network
+
+  # --- DEVELOPMENT DATABASE GUI ---
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - hpc_network
+
+volumes:
+  dev_db_data:
+  test_db_data:
+
+networks:
+  hpc_network:
