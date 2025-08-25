@@ -69,3 +69,17 @@ export async function findItems(query: { parentId?: string }) {
   });
   return items;
 }
+
+export type UpdateDriveItemInput = {
+  name?: string;
+  parentId?: string | null;
+};
+
+export async function updateItem(itemId: string, data: UpdateDriveItemInput) {
+  const updatedItem = await prisma.driveItem.update({
+    where: { itemId },
+    data: data, 
+  });
+  return updatedItem;
+}
+

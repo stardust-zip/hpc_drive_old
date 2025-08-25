@@ -1,14 +1,16 @@
 import { Router } from "express";
 import {
-    createItemHandler,
-    getItemByIdHandler,
-    getItemsHandler,
+  createItemHandler,
+  getItemByIdHandler,
+  getItemsHandler,
+  updateItemHandler,
 } from "../controllers/driveItem.controller";
 import { validate } from "../middlewares/validate";
 import {
-    createDriveItemSchema,
-    getItemSchema,
-    getItemsSchema,
+  createDriveItemSchema,
+  getItemSchema,
+  getItemsSchema,
+  updateItemSchema,
 } from "../validations/driveItem.validation";
 
 const router: Router = Router();
@@ -22,5 +24,7 @@ router.post("/", validate(createDriveItemSchema), createItemHandler);
 
 router.get("/", validate(getItemsSchema), getItemsHandler);
 router.get("/:itemId", validate(getItemSchema), getItemByIdHandler);
+
+router.put("/:itemId", validate(updateItemSchema), updateItemHandler);
 
 export default router;

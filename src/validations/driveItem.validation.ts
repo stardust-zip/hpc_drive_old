@@ -35,3 +35,15 @@ export const getItemsSchema = z.object({
     parentId: z.string().uuid("Invalid parent ID").optional(),
   }),
 });
+
+export const updateItemSchema = z.object({
+  params: z.object({
+    itemId: z.uuid('Invalid item ID'),
+  }),
+  body: z.object({
+    name: z.string().min(1).optional(),
+    parentId: z.uuid().nullable().optional(),
+  }).refine(data => Object.keys(data).length > 0, {
+    message: 'Update body cannot be empty',
+  }),
+});
