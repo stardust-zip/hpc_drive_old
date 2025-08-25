@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DriveItem {
+	itemId String @id @default(uuid())
+	ownerId String
+	parentId String?
+	name String
+	itemType ItemType
+	isTrashed Boolean @default(false)
+	trashedAt DateTime?
+	permission Permission
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+
+	parent DriveItem? @relation("FolderChildren", fields: [parentId], references: [itemId])
+	children DriveItem[] @relation("FolderChildren")
+
+	fileMetadata FileMetadata?
+
+	@@map("drive_items")
+}
+
+model FileMetadata {
+	itemId String @id
+	mimeType String
+	size BigInt
+	storagePath String
+	version Int @default(1)
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+
+	driveItem DriveItem @relation(fields: [itemId], references: [itemId])
+
+	@@map("file_metadata")
+}
+
+enum ItemType {
+	FILE
+	FOLDER
+}
+
+enum Permission {
+	PRIVATE
+	SHARED
+}
