@@ -1,42 +1,26 @@
 import { prisma } from "../lib/prisma";
 import { ItemType, Permission, Prisma } from "@prisma/client";
+import fs from "fs";
+import path from "path";
 
 import { z } from "zod";
 import { createDriveItemSchema } from "../validations/driveItem.validation";
 type CreateDriveItemInput = z.infer<typeof createDriveItemSchema>["body"];
 
-export async function createItem(data: CreateDriveItemInput, ownerId: string) {
-  const { name, parentId, itemType } = data;
-
+export async function createItem(data: any, ownerId: string) {
   const createPayload: Prisma.DriveItemCreateInput = {
-    name,
-    ownerId,
-    itemType,
+    name: data.name,
+    itemType: data.itemType,
+    ownerId: ownerId,
     permission: Permission.PRIVATE,
   };
 
-  if (parentId) {
-    createPayload.parent = {
-      connect: { itemId: parentId },
-    };
+  if (data.parentId) {
+    createPayload.parent = { connect: { itemId: data.parentId } };
   }
 
-  if (itemType === ItemType.FILE && data.itemType === ItemType.FILE) {
-    createPayload.fileMetadata = {
-      create: {
-        mimeType: data.fileMetadata.mimeType,
-        size: BigInt(data.fileMetadata.size),
-        storagePath: `some/path/${name}`, // This is just placeholder path, do whatever u want with it?
-      },
-    };
-  }
-
-  // okay, we cooked the new item now. let's ship it to the prisma kitchen
   const newItem = await prisma.driveItem.create({
     data: createPayload,
-    include: {
-      fileMetadata: true, // this is fine, even if item is a folder
-    },
   });
 
   return newItem;
@@ -72,7 +56,7 @@ export type UpdateDriveItemInput = {
 export async function updateItem(itemId: string, data: UpdateDriveItemInput) {
   const updatedItem = await prisma.driveItem.update({
     where: { itemId },
-    data: data, 
+    data: data,
   });
   return updatedItem;
 }
@@ -85,23 +69,32 @@ export async function deleteItem(itemId: string) {
 }
 
 export async function createFile(
-  data: CreateDriveItemInput,
+  data: any,
   ownerId: string,
-  file: Express.Multer.File
+  file: Express.Multer.File,
 ) {
-  console.log(`Saving file "${file.originalname}" to storage. Size: ${file.size} bytes.`);
-  const storagePath = `uploads/${ownerId}/${Date.now()}-${file.originalname}`;
+  const uploadDir = path.join(__dirname, `../../uploads/${ownerId}`);
+
+  fs.mkdirSync(uploadDir, { recursive: true });
+
+  const storagePath = path.join(
+    uploadDir,
+    `${Date.now()}-${file.originalname}`,
+  );
+
+  fs.writeFileSync(storagePath, file.buffer);
+  console.log(`Saved file to: ${storagePath}`);
 
   const createPayload: Prisma.DriveItemCreateInput = {
     name: data.name,
     ownerId: ownerId,
-    itemType: 'FILE',
+    itemType: "FILE",
     permission: Permission.PRIVATE,
     fileMetadata: {
       create: {
         mimeType: file.mimetype,
         size: BigInt(file.size),
-        storagePath: storagePath, 
+        storagePath: storagePath,
       },
     },
   };
@@ -117,4 +110,3 @@ export async function createFile(
 
   return newItem;
 }
-
