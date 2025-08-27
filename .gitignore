@@ -142,6 +142,9 @@ dist
 # SvelteKit build / generate output
 .svelte-kit
 
+# Editor
+.zed
+
 # End of https://www.toptal.com/developers/gitignore/api/node
 
 /src/generated/prisma
