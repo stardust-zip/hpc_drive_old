@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as driveItemService from "../services/driveItem.service";
+import { createDriveItemSchema } from "../validations/driveItem.validation";
+import { ZodError } from "zod";
 
 export async function createItemHandler(
   req: Request,
@@ -16,23 +18,40 @@ export async function createItemHandler(
     }
 
     let newItem;
-    // Check if a file was uploaded by multer
     if (req.file) {
-      // It's a file upload. The metadata is in req.body.document
       const metadata = JSON.parse(req.body.document);
-      // The actual file data is in req.file
-      newItem = await driveItemService.createFile(metadata, ownerId, req.file);
+      const validatedMetadata = createDriveItemSchema.parse({
+        body: metadata,
+      }).body;
+      newItem = await driveItemService.createFile(
+        validatedMetadata,
+        ownerId,
+        req.file,
+      );
     } else {
-      // It's a folder creation (or other JSON-based creation)
-      newItem = await driveItemService.createItem(req.body, ownerId);
+      const validatedBody = createDriveItemSchema.parse({
+        body: req.body,
+      }).body;
+      newItem = await driveItemService.createItem(validatedBody, ownerId);
     }
 
     res.status(201).json({
       success: true,
       data: newItem,
-      message: "Item created successfully",
+      // message: "Item created successfully",
     });
   } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid input data",
+          details: error.issues,
+        },
+      });
+    }
+    // For all other errors, pass them to the 500 handler
     next(error);
   }
 }
