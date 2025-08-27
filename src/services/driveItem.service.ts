@@ -1,17 +1,13 @@
 import { prisma } from "../lib/prisma";
 import { ItemType, Permission, Prisma } from "@prisma/client";
 
-// Create type from zod schema for type safety
 import { z } from "zod";
 import { createDriveItemSchema } from "../validations/driveItem.validation";
 type CreateDriveItemInput = z.infer<typeof createDriveItemSchema>["body"];
 
-// this data come from a request, post request for example
 export async function createItem(data: CreateDriveItemInput, ownerId: string) {
-  // Set data.name to name, data.parentId to parentId,...
   const { name, parentId, itemType } = data;
 
-  // Define the type for data payload, these are just shorthand for name: name, etc.
   const createPayload: Prisma.DriveItemCreateInput = {
     name,
     ownerId,
@@ -19,7 +15,6 @@ export async function createItem(data: CreateDriveItemInput, ownerId: string) {
     permission: Permission.PRIVATE,
   };
 
-  // if parentId exist, the foreign key active, connecting this item's id to it's parent item's id
   if (parentId) {
     createPayload.parent = {
       connect: { itemId: parentId },
@@ -30,7 +25,6 @@ export async function createItem(data: CreateDriveItemInput, ownerId: string) {
     createPayload.fileMetadata = {
       create: {
         mimeType: data.fileMetadata.mimeType,
-        // size: data.fileMetadata.size,
         size: BigInt(data.fileMetadata.size),
         storagePath: `some/path/${name}`, // This is just placeholder path, do whatever u want with it?
       },
@@ -88,5 +82,39 @@ export async function deleteItem(itemId: string) {
     where: { itemId },
   });
   return deletedItem;
+}
+
+export async function createFile(
+  data: CreateDriveItemInput,
+  ownerId: string,
+  file: Express.Multer.File
+) {
+  console.log(`Saving file "${file.originalname}" to storage. Size: ${file.size} bytes.`);
+  const storagePath = `uploads/${ownerId}/${Date.now()}-${file.originalname}`;
+
+  const createPayload: Prisma.DriveItemCreateInput = {
+    name: data.name,
+    ownerId: ownerId,
+    itemType: 'FILE',
+    permission: Permission.PRIVATE,
+    fileMetadata: {
+      create: {
+        mimeType: file.mimetype,
+        size: BigInt(file.size),
+        storagePath: storagePath, 
+      },
+    },
+  };
+
+  if (data.parentId) {
+    createPayload.parent = { connect: { itemId: data.parentId } };
+  }
+
+  const newItem = await prisma.driveItem.create({
+    data: createPayload,
+    include: { fileMetadata: true },
+  });
+
+  return newItem;
 }
 

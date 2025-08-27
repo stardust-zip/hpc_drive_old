@@ -8,7 +8,6 @@ export async function createItemHandler(
 ) {
   try {
     const ownerId = req.headers["x-user-id"] as string;
-
     if (!ownerId) {
       return res.status(401).json({
         success: false,
@@ -16,7 +15,17 @@ export async function createItemHandler(
       });
     }
 
-    const newItem = await driveItemService.createItem(req.body, ownerId);
+    let newItem;
+    // Check if a file was uploaded by multer
+    if (req.file) {
+      // It's a file upload. The metadata is in req.body.document
+      const metadata = JSON.parse(req.body.document);
+      // The actual file data is in req.file
+      newItem = await driveItemService.createFile(metadata, ownerId, req.file);
+    } else {
+      // It's a folder creation (or other JSON-based creation)
+      newItem = await driveItemService.createItem(req.body, ownerId);
+    }
 
     res.status(201).json({
       success: true,
